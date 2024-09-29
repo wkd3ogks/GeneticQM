@@ -15,12 +15,14 @@
 
 ## Example
 
+<div align="center">
+  
 ![Figure_1](https://github.com/user-attachments/assets/addab4c2-1ac0-4132-a158-165b694d0239)
 ![Cover Minterms](https://github.com/user-attachments/assets/ea483178-cca7-40c5-a470-b128eb457c32)
 ![Best Gene Hitmap(Used Prime Implicants)](https://github.com/user-attachments/assets/d323619d-a52b-4a7d-bbb4-192dce86267b)
 <img width="1228" alt="스크린샷 2024-09-29 오후 6 51 06" src="https://github.com/user-attachments/assets/6e9e8099-e6bf-46a7-918b-5e3e4fb91fb1">
 
-
+</div>
 
 ## Fitness Function
 

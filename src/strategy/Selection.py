@@ -6,7 +6,7 @@ class SelectionStrategy(ABC):
     def process(self, parent_population_size, genomes_with_fitness):
         pass
 
-class RouletWheelSelection(SelectionStrategy):
+class RouletteWheel(SelectionStrategy):
     def __init__(self, population_size):
         self.population_size = population_size
     def __lower_bound(self, fitness_sum, find):

@@ -2,29 +2,35 @@ import math
 import random
 from rich.table import Table
 
-from Visualization import HitmapPlot, FitnessPlot
-from Utils import integer_to_binary, console
-
+from src.Algorithm import Algorithm
+from src.Visualization import HitmapPlot, FitnessPlot
+from src.Utils import integer_to_binary, console
+from src.strategy.Crossover import Uniform
+from src.strategy.Selection import RouletteWheel
 # 평가할때 돈캐어는 처리하면 안된다.
-class GeneticAlgorithm:
-    def __init__(self, prime_implicants, minterms, crossover_strategy, population_size,
-                 epoch, weight, mutation_rate, parent_population_size, selection_strategy, bit_mutation_rate):
-        self.prime_implicants = prime_implicants
-        self.minterms = minterms
-        self.gene_size = len(self.prime_implicants)
-        self.population_size = population_size
+class GeneticAlgorithm(Algorithm):
+    def __init__(self, parameters):
+        super().__init__()
+        # paramerter dictionary unpacking
+        self.population_size = int(parameters["population_size"])
+        self.epoch = int(parameters["epoch"])
+        self.weight = int(parameters["weight"])
+        self.mutation_rate = float(parameters["mutation_rate"])
+        self.parent_population_size = int(parameters["parent_population_size"])
+        self.bit_mutation_rate = float(parameters["bit_mutation_rate"])
+
+        self.crossover_strategy = Uniform()
+        self.selection_strategy = RouletteWheel(self.population_size)
         self.best_solution = (0, -math.inf, -math.inf, math.inf, -1) # 유전자, 적합도, 커버한 민텀, 사용한 주항, epoch
-        self.epoch = epoch
-        self.weight = weight
-        self.mutation_rate = mutation_rate
-        self.crossover_strategy = crossover_strategy
-        self.parent_population_size = parent_population_size
-        self.selection_strategy = selection_strategy
-        self.bit_mutation_rate = bit_mutation_rate
+
+    def set_prime_implicants(self, prime_implicants):
+        self.prime_implicants = prime_implicants
+        self.gene_size = len(self.prime_implicants)
 
     def __init_population(self):
         bit_limit = 1 << self.gene_size  # 2 ** self.gene_size
-        return random.sample(range(bit_limit), self.population_size)
+        print("self.population_size", self.population_size, bit_limit, self.prime_implicants)
+        return random.choices(range(2 ** bit_limit), k=self.population_size)
 
     def __mutation(self, genome):
         if random.random() < self.mutation_rate:
@@ -65,7 +71,7 @@ class GeneticAlgorithm:
                         # 검색 시간 느림(list)
                         if covered_minterm in self.minterms:
                             cover_set.add(covered_minterm)
-            fitness = self.weight * len(cover_set) + len(self.prime_implicants) - used_prime_implicant
+            fitness = self.weight * len(cover_set)  + len(self.prime_implicants) - used_prime_implicant
             #fitness = (len(cover_set) * weight ) * ( len(self.prime_implicants) - used_prime_implicant)
             total_fitness += fitness
 

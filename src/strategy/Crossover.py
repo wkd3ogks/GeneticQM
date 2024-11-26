@@ -7,7 +7,7 @@ class CrossoverStrategy(ABC):
         pass
 
 
-class SinglePointCrossover(CrossoverStrategy):
+class SinglePoint(CrossoverStrategy):
     def process(self, parents, gene_size):
         random_point = random.randrange(gene_size)
         mask = (1 << random_point) - 1
@@ -15,7 +15,7 @@ class SinglePointCrossover(CrossoverStrategy):
         return child_genome
 
 
-class UniformCrossover(CrossoverStrategy):
+class Uniform(CrossoverStrategy):
     def process(self, parents, gene_size):
         genome = 0
         for i in range(gene_size):

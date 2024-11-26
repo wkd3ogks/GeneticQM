@@ -1,5 +1,5 @@
 from rich.table import Table
-from Utils import integer_to_binary, console
+from src.Utils import integer_to_binary, console
 
 # rich 말고 이미지로 차트 저장하기.
 # prime implicant chart 출력 방식 변경하기
@@ -121,12 +121,13 @@ class QuineMcClusky:
                     data[minterm_dict[minterm]] = 'X'
             render_table.add_row(str(prime_implicant), *data, end_section=True)
         console.print(render_table)
+
     # 민텀과 주항 리턴
-    def process(self, builder):
+    def process(self, algorithm):
         self.__set_prime_implicant()
-        self.__display_prime_implicant_chart()
-        builder.set_prime_implicants(self.prime_implicants)
-        builder.set_minterms(self.minterms)
-        algorithm = builder.build()
+        # self.__display_prime_implicant_chart()
+        
+        algorithm.set_prime_implicants(self.prime_implicants)
+        algorithm.set_minterms(self.minterms)
         algorithm.process()
         return (self.prime_implicants, self.minterms)

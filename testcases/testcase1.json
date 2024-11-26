@@ -2,9 +2,15 @@
     "minterms": [2, 3, 1, 5],
     "dontcares": [6, 7],
     "parameters": { 
-        "population_size": [600],
-        "epoch": [350],
-        "weight": [2],
-        "mutation_rate": [0.35]
+        "population_size": 30,
+        "parent_population_size": 10,
+        "epoch": 10,
+        "weight": 2,
+        "mutation_rate": 0.35,
+        "bit_mutation_rate": 0.1
+    },
+    "strategy": {
+        "crossover": "one_point",
+        "selection": "tournament"
     }
 }

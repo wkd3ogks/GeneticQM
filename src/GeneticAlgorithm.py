@@ -7,7 +7,7 @@ from src.Visualization import HitmapPlot, FitnessPlot
 from src.Utils import integer_to_binary, console
 from src.strategy.Crossover import Uniform
 from src.strategy.Selection import RouletteWheel
-# 평가할때 돈캐어는 처리하면 안된다.
+
 class GeneticAlgorithm(Algorithm):
     def __init__(self, parameters):
         super().__init__()

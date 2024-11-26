@@ -1,8 +1,5 @@
+from src.Utils import console, integer_to_binary
 from rich.table import Table
-from src.Utils import integer_to_binary, console
-
-# rich 말고 이미지로 차트 저장하기.
-# prime implicant chart 출력 방식 변경하기
 
 class QuineMcClusky:
     def __init__(self, minterms, dontcares):

@@ -10,8 +10,7 @@ from src.strategy.Selection import RouletteWheel
 
 class GeneticAlgorithm(Algorithm):
     def __init__(self, parameters):
-        # create a prime_implicants and miterms initailized to None
-        super().__init__()
+        super().__init__()  # prime_implicants and miterms initailized to None
 
         # paramerter dictionary unpacking
         self.population_size = int(parameters["population_size"])

@@ -1,3 +1,5 @@
+# GUI Application for Genetic Quine-McCluskey Algorithm
+
 import tkinter as tk
 from tkinter import filedialog, messagebox
 

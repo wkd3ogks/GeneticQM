@@ -1,21 +1,23 @@
-from src.Utils import console, integer_to_binary
-from rich.table import Table
-import pandas as pd
-from datetime import datetime
+import os
+from src.Utils import integer_to_binary
 
-class QuineMcClusky:
-    def __init__(self, minterms, dontcares):
+class QuineMcCluskey:
+    def __init__(self, minterms, dontcares, output_directory):
         self.minterms = minterms
         self.dontcares = dontcares
         self.max_bit = len(bin(max(minterms + dontcares))) - 2 # 2 is the length of '0b'
         self.prime_implicants = []
+
+        # create quine_mccluskey output directory
+        self.output_directory = os.path.join(output_directory, 'quine_mccluskey')
+        os.makedirs(self.output_directory, exist_ok=True)
 
     def __init_table(self):
         """ 
         Initialize the table with minterms and dontcares
 
         Returns:
-            dict: key: bit_count(group), value: list of tuple (minterm, dash)
+            dict: key: bit_count(group), value: list of tuple (minterms, dash_position)
         """
         table = {} 
         for term in self.minterms + self.dontcares:
@@ -25,15 +27,7 @@ class QuineMcClusky:
             else:
                 table[bit_count].append(((term,), 0))
 
-        # dataframe test
-        data = []
-        for bit_count in sorted(table):
-            for term in sorted(table[bit_count]):
-                term_to_binary = self.__combine_minterm_with_dash(integer_to_binary.process(term[0][0], self.max_bit), term[1])
-                data.append([bit_count, term_to_binary])
-        df = pd.DataFrame(data, columns=['Group No.', 'Binary of Minterms'])
-        df.to_html('./outputs/table.html')
-        print(df)
+        self.__save_table_to_csv(table)
         # self.__render_table(1, table)
         return table
 
@@ -54,34 +48,30 @@ class QuineMcClusky:
                 combine_minterm_with_dash[self.max_bit - 1 - i] = '-'
         return ''.join(combine_minterm_with_dash)
 
-    def __render_table(self, step_number, table):
-        render_table = Table(title=f"Column {step_number}")
-        for column in ["Group No.", "Minterms", "Binary of Minterms"]:
-            render_table.add_column(column)
+    def __save_table_to_csv(self, table, step_name='step_1'):
+        """
+        save the quine mccluskey table to csv file
 
-        for bit_count in sorted(table):
-            is_first_row = True
-            group_size = len(table[bit_count])
-            for idx, term in enumerate(sorted(table[bit_count])):
-                # combine with dash
-                term_to_binary = self.__combine_minterm_with_dash(integer_to_binary.process(term[0][0], self.max_bit), term[1])
-                if is_first_row:
-                    render_table.add_row(str(bit_count),
-                                         ', '.join(map(str, term[0])),
-                                         term_to_binary,
-                                         style='bright_green',
-                                         end_section=(idx == group_size - 1)
-                                         )
-                    is_first_row = False
-                else:
-                    render_table.add_row(' ',
-                                         ', '.join(map(str, term[0])),
-                                         term_to_binary,
-                                         style='bright_green',
-                                         end_section=(idx == group_size - 1)
-                                         )
-        console.print(render_table)
+        Args:
+            table (dict): key: bit_count(group), value: list of tuple (minterms, dash_position)
+            step_name (str, optional): step name. Defaults to 'step_1'.
+        """
+        with open(os.path.join(self.output_directory, f'{step_name}_table.csv'), 'w') as f:
+            for bit_count in sorted(table):
+                for minterms, dash_position in sorted(table[bit_count]):
+                    term_to_binary = self.__combine_minterm_with_dash(integer_to_binary.process(minterms[0], self.max_bit), dash_position)
+                    f.write(f"{bit_count}, {term_to_binary}\n")
 
+    def __save_prime_implicants_to_csv(self):
+        """
+        save the prime implicants to csv file
+        first element is the index of the prime implicant and second element is the prime implicant's minterms
+        """
+        with open(os.path.join(self.output_directory, 'prime_implicants.csv'), 'w') as f:
+            for index, prime_implicant in enumerate(self.prime_implicants):
+                f.write(f"{index + 1}, {'(' + ' '.join(map(str, prime_implicant)) + ')'}\n") 
+
+    # TODO: ....
     def __merge_minterm(self, step_number, table):  # return True or False
         new_table = {}
         generated_minterms_set = set()
@@ -118,10 +108,11 @@ class QuineMcClusky:
                 if is_prime_implicant:
                     self.prime_implicants.append(tuple(minterm[0]))
         if new_table:
-            self.__render_table(step_number, new_table)
+            self.__save_table_to_csv(new_table, f'step_{step_number}')
         return new_table
 
-    def __set_prime_implicant(self):
+    # TODO: ....
+    def process(self):
         new_table = self.__init_table()
         step_number = 2
         while True:
@@ -130,30 +121,5 @@ class QuineMcClusky:
             step_number += 1
             if not new_table:
                 break
-        return self.prime_implicants
-
-    def __display_prime_implicant_chart(self):
-        render_table = Table(title="Prime Implicant Chart")
-        minterm_dict = {}
-        for idx, minterm in enumerate(self.minterms):
-            minterm_dict[minterm] = idx
-        for column in ["Prime Implicants \\ Minterms"] + list(map(str, self.minterms)):
-            render_table.add_column(column)
-        for prime_implicant in self.prime_implicants:
-            data = [' ' for _ in range(len(self.minterms))]
-            for minterm in prime_implicant:
-                if minterm in minterm_dict:
-                    data[minterm_dict[minterm]] = 'X'
-            render_table.add_row(str(prime_implicant), *data, end_section=True)
-        console.print(render_table)
-
-    # 민텀과 주항 리턴
-    def process(self, algorithm):
-        self.__set_prime_implicant()
-        #
-        # self.__display_prime_implicant_chart()
-        
-        algorithm.set_prime_implicants(self.prime_implicants)
-        algorithm.set_minterms(self.minterms)
-        algorithm.process()
+        self.__save_prime_implicants_to_csv()
         return (self.prime_implicants, self.minterms)

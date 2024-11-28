@@ -3,3 +3,4 @@
 /src/__pycache__/
 /src/strategy/__pycache__/
 /outputs/
+.DS_Store

@@ -10,7 +10,9 @@ from src.strategy.Selection import RouletteWheel
 
 class GeneticAlgorithm(Algorithm):
     def __init__(self, parameters):
+        # create a prime_implicants and miterms initailized to None
         super().__init__()
+
         # paramerter dictionary unpacking
         self.population_size = int(parameters["population_size"])
         self.epoch = int(parameters["epoch"])
@@ -30,7 +32,7 @@ class GeneticAlgorithm(Algorithm):
     def __init_population(self):
         bit_limit = 1 << self.gene_size  # 2 ** self.gene_size
         print("self.population_size", self.population_size, bit_limit, self.prime_implicants)
-        return random.choices(range(2 ** bit_limit), k=self.population_size)
+        return random.choices(range(bit_limit), k=self.population_size)
 
     def __mutation(self, genome):
         if random.random() < self.mutation_rate:
@@ -72,6 +74,8 @@ class GeneticAlgorithm(Algorithm):
                         if covered_minterm in self.minterms:
                             cover_set.add(covered_minterm)
             fitness = self.weight * len(cover_set)  + len(self.prime_implicants) - used_prime_implicant
+            print(len(cover_set), len(self.prime_implicants), used_prime_implicant, bin(genome), fitness)
+            assert(fitness >= 0)
             #fitness = (len(cover_set) * weight ) * ( len(self.prime_implicants) - used_prime_implicant)
             total_fitness += fitness
 
@@ -130,3 +134,6 @@ class GeneticAlgorithm(Algorithm):
         fitness_plot.finalize()
         covered_minterm_hitmap.show('Greys', has_colorbar=True, has_min_limit=True)
         best_gene_hitmap.show('Blues')
+
+class VectorizedGeneticAlgorithm(GeneticAlgorithm):
+    pass

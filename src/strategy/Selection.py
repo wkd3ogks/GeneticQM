@@ -36,8 +36,8 @@ class RouletteWheel(SelectionStrategy):
         idx = 0
 
         while idx < parent_population_size:
+            print(total_fitness)
             random_number = random.randrange(total_fitness + 1)
-
             genome_idx = self.__lower_bound(fitness_sum, random_number)
             selected_genome = genomes_with_fitness[genome_idx][1]
             parent_genomes.append(selected_genome)

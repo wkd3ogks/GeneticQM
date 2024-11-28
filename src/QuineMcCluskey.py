@@ -1,25 +1,53 @@
 from src.Utils import console, integer_to_binary
 from rich.table import Table
+import pandas as pd
+from datetime import datetime
 
 class QuineMcClusky:
     def __init__(self, minterms, dontcares):
         self.minterms = minterms
         self.dontcares = dontcares
-        self.max_bit = len(bin(max(minterms + dontcares))) - 2
+        self.max_bit = len(bin(max(minterms + dontcares))) - 2 # 2 is the length of '0b'
         self.prime_implicants = []
 
     def __init_table(self):
-        table = {}
+        """ 
+        Initialize the table with minterms and dontcares
+
+        Returns:
+            dict: key: bit_count(group), value: list of tuple (minterm, dash)
+        """
+        table = {} 
         for term in self.minterms + self.dontcares:
-            bit_count = term.bit_count()
+            bit_count = term.bit_count() # number of 1s in the binary representation
             if bit_count not in table:
-                table[bit_count] = [((term,), 0)]
+                table[bit_count] = [((term,), 0)] 
             else:
                 table[bit_count].append(((term,), 0))
-        self.__render_table(1, table)
+
+        # dataframe test
+        data = []
+        for bit_count in sorted(table):
+            for term in sorted(table[bit_count]):
+                term_to_binary = self.__combine_minterm_with_dash(integer_to_binary.process(term[0][0], self.max_bit), term[1])
+                data.append([bit_count, term_to_binary])
+        df = pd.DataFrame(data, columns=['Group No.', 'Binary of Minterms'])
+        df.to_html('./outputs/table.html')
+        print(df)
+        # self.__render_table(1, table)
         return table
 
     def __combine_minterm_with_dash(self, binary_minterm, dash):
+        """
+        for debugging purpose, combine minterm with dash information
+
+        Args:
+            binary_minterm (str): minterm in binary format string
+            dash (int): dash location information
+
+        Returns:
+            str: combined minterm with dash
+        """
         combine_minterm_with_dash = [bit for bit in binary_minterm]
         for i in range(self.max_bit):
             if (dash >> i) & 1:
@@ -58,11 +86,11 @@ class QuineMcClusky:
         new_table = {}
         generated_minterms_set = set()
         not_prime_implicants = set()
-        groups = sorted(table)
-        for group_bit_count in groups:
+        groups = sorted(table) # sort by group number(bit_count) to compare with the next group
+        for group_bit_count in groups: 
             group = sorted(table[group_bit_count])
-            if group_bit_count + 1 not in table:
-                for minterm in group:
+            if group_bit_count + 1 not in table: # find 1 bit difference group
+                for minterm in group: # minterm[0] is the set of minterms, minterm[1] is the dash information
                     if tuple(minterm[0]) not in not_prime_implicants:
                         self.prime_implicants.append(tuple(minterm[0]))
                 continue
@@ -122,6 +150,7 @@ class QuineMcClusky:
     # 민텀과 주항 리턴
     def process(self, algorithm):
         self.__set_prime_implicant()
+        #
         # self.__display_prime_implicant_chart()
         
         algorithm.set_prime_implicants(self.prime_implicants)

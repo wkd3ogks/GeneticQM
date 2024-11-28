@@ -1,7 +1,7 @@
 import math
 import random
 from rich.table import Table
-
+from overrides import overrides
 from src.Algorithm import Algorithm
 from src.Visualization import HitmapPlot, FitnessPlot
 from src.Utils import integer_to_binary, console
@@ -24,6 +24,7 @@ class GeneticAlgorithm(Algorithm):
         self.selection_strategy = RouletteWheel(self.population_size)
         self.best_solution = (0, -math.inf, -math.inf, math.inf, -1) # 유전자, 적합도, 커버한 민텀, 사용한 주항, epoch
 
+    @overrides
     def set_prime_implicants(self, prime_implicants):
         self.prime_implicants = prime_implicants
         self.gene_size = len(self.prime_implicants)

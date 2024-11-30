@@ -1,10 +1,20 @@
-import math
-import random
-from rich.table import Table
+""" 
+Genetic Algorithm
+    1. Initialize the population with random genomes. [ __init_population method ]
+    2. Evaluate the fitness of each genome. [ evaluate_fitness method ]
+    3. Select the parents based on the fitness. [ __selection method ]
+    4. Generate the next generation by crossover(mixing the genes of the parents) [ __crossover method ] 
+    5. Mutate the genes of the next generation. [ __mutation method ]
+    6. Replace the current generation with the next generation. [ __select_next_genomes method ]
+    7. Repeat steps 2-6 until maximum epoch is reached.
+"""
+
+import math, random
 from overrides import overrides
+
+import numpy as np
+
 from src.Algorithm import Algorithm
-from src.Visualization import HitmapPlot, FitnessPlot
-from src.Utils import integer_to_binary, console
 from src.strategy.Crossover import Uniform
 from src.strategy.Selection import RouletteWheel
 
@@ -24,21 +34,30 @@ class GeneticAlgorithm(Algorithm):
         self.selection_strategy = RouletteWheel(self.population_size)
         self.best_solution = (0, -math.inf, -math.inf, math.inf, -1) # 유전자, 적합도, 커버한 민텀, 사용한 주항, epoch
 
+        # data for visualization
+        self.fitness_data = {'average': [], 'max': [], 'min': []}
+        self.max_genomes = []
+
     @overrides
     def set_prime_implicants(self, prime_implicants):
         self.prime_implicants = prime_implicants
-        self.gene_size = len(self.prime_implicants)
+        self.gene_size = len(self.prime_implicants) # number of prime implicants
 
     def __init_population(self):
+        """
+        Initialize the population with random genomes.
+
+        Returns:
+            list[int]: list of random genomes
+        """
         bit_limit = 1 << self.gene_size  # 2 ** self.gene_size
-        print("self.population_size", self.population_size, bit_limit, self.prime_implicants)
-        return random.choices(range(bit_limit), k=self.population_size)
+        return random.choices(range(bit_limit), k=self.population_size) # select random genome from 0 to 2 ** self.gene_size - 1
 
     def __mutation(self, genome):
         if random.random() < self.mutation_rate:
             for i in range(self.gene_size):
                 if random.random() < self.bit_mutation_rate:
-                    genome ^= (1 << i)  # i번째 비트를 뒤집음
+                    genome ^= (1 << i)  # flip i-th bit
         return genome
 
     def __crossover(self, parents):
@@ -48,6 +67,15 @@ class GeneticAlgorithm(Algorithm):
         return self.selection_strategy.process(self.parent_population_size, genomes)
 
     def __select_next_genomes(self, genomes):
+        """
+        Generate the next genomes by selection, crossover and mutation.
+
+        Args:
+            genomes (list[int]): list of genomes
+
+        Returns:
+            list[int]: next generation list of genomes
+        """
         parent_genomes = self.__selection(genomes)
         next_genomes = []
         for _ in range(self.population_size):
@@ -57,83 +85,70 @@ class GeneticAlgorithm(Algorithm):
                 self.__mutation(self.__crossover((parent_genomes[random_number1], parent_genomes[random_number2]))))
         return next_genomes
 
-    # 모든 민텀을 커버하면서 가장 적은 민텀을 가지는 것이 가장 중요하다.
-    def evaluate_fitness(self, genomes, epoch):
-        genomes_with_fitness = []  # 각 유전자의 적합도와 함께 저장
+    def __evaluate_fitness(self, genomes, epoch):
+        """
+        fitness function:
+            weight * number of covered minterms + total_prime_implicants - number of used prime implicants
+
+        Args:
+            genomes (list[int]): list of genomes
+            epoch (int): current epoch
+
+        Returns:
+            (int, int, int, list[(int, int)]): result of the evaluation ( total_fitness, min_genome, max_genome, genomes_with_fitness) )
+        """
+        genomes_with_fitness = []  # list of (evaluated fitness, genome)
+
+        # initialize min_genome, max_genome, total_fitness
         min_genome = [math.inf, None]
         max_genome = [-math.inf, None]
         total_fitness = 0
+
+        # using set for faster search
+        minterms = set(self.minterms)
+
         for genome in genomes:
             used_prime_implicant = genome.bit_count()
-            cover_set = set()
+            cover_set = set() # len(cover_set):  number of covered minterms
 
-            for i in range(self.gene_size):
-                if (genome >> i) & 1:
+            # find covered minterms
+            for i in range(self.gene_size): # i: index of prime implicant
+                if (genome >> i) & 1: # check back to front(gene_size - 1 to 0-th bit)
                     for covered_minterm in self.prime_implicants[self.gene_size - 1 - i]:
-                        # 검색 시간 느림(list)
-                        if covered_minterm in self.minterms:
+                        if covered_minterm in minterms:
                             cover_set.add(covered_minterm)
-            fitness = self.weight * len(cover_set)  + len(self.prime_implicants) - used_prime_implicant
-            print(len(cover_set), len(self.prime_implicants), used_prime_implicant, bin(genome), fitness)
-            assert(fitness >= 0)
-            #fitness = (len(cover_set) * weight ) * ( len(self.prime_implicants) - used_prime_implicant)
+            # evaluate fitness
+            covered_minterms, total_prime_implicants = len(cover_set), len(self.prime_implicants)
+            fitness = self.weight * covered_minterms  + total_prime_implicants - used_prime_implicant
             total_fitness += fitness
 
+            # update min_genome, max_genome and best_solution
             if fitness < min_genome[0]:
                 min_genome = [fitness, genome]
-
             if fitness > max_genome[0]:
                 max_genome = [fitness, genome]
-
             if fitness > self.best_solution[1]:
                 self.best_solution = (genome, fitness, len(cover_set), used_prime_implicant, epoch)
+
             genomes_with_fitness.append((fitness, genome))
         return (total_fitness, min_genome, max_genome, genomes_with_fitness)
-
-    def __binary_gene_to_list(self, gene):
-        ret = [0 for _ in range(self.gene_size)]
-        for i in range(self.gene_size):
-            if (gene >> i) & 1:
-                ret[self.gene_size - 1 - i] = 1
-        return ret
-
-
-    def __generate_mintom_cover_list(self, gene):
-        minterm_to_idx = dict()
-        for i, idx in enumerate(self.minterms):
-            minterm_to_idx[idx] = i
-        ret = [0 for _ in range(len(self.minterms))]
-        for i in range(self.gene_size):
-            if (gene >> i) & 1:
-                for j in self.prime_implicants[self.gene_size - 1 - i]:
-                    if j in minterm_to_idx:
-                        ret[minterm_to_idx[j]] += 1
-        return ret
-    def __render_result(self):
-        render_table = Table(title="Genetic Algorithm Result")
-        for column in ["Used Prime Implicants", "Number of Used Prime Implicants",
-                       "Number of Covered Minterms", "Covered Minterms / Total Minterms", "Epoch"]:
-            render_table.add_column(column)
-        render_table.add_row(integer_to_binary.process(self.best_solution[0], self.gene_size), str(self.best_solution[3]),
-                             str(self.best_solution[2]), str((self.best_solution[2]/len(self.minterms)) * 100) + '%', str(self.best_solution[4]))
-        console.print(render_table)
+    
     def process(self):
-        fitness_plot = FitnessPlot()
-        best_gene_hitmap = HitmapPlot("Best Gene Hitmap(Used Prime Implicants)")
-        covered_minterm_hitmap = HitmapPlot("Cover Minterms")
-
-        fitness_plot.init()
         genomes = self.__init_population()
         for epoch in range(self.epoch):
-            total_fitness, min_genome, max_genome, child_genomes = self.evaluate_fitness(genomes, epoch)
-            fitness_plot.update(epoch, total_fitness / self.population_size, max_genome[0], min_genome[0])
-            best_gene_hitmap.append(self.__binary_gene_to_list(max_genome[1]))
-            covered_minterm_hitmap.append(self.__generate_mintom_cover_list(max_genome[1]))
-            genomes = self.__select_next_genomes(child_genomes)
-        self.__render_result()
-        fitness_plot.finalize()
-        covered_minterm_hitmap.show('Greys', has_colorbar=True, has_min_limit=True)
-        best_gene_hitmap.show('Blues')
+            total_fitness, min_genome, max_genome, child_genomes = self.__evaluate_fitness(genomes, epoch)
 
-class VectorizedGeneticAlgorithm(GeneticAlgorithm):
-    pass
+            # set fitness data
+            self.fitness_data['average'].append(total_fitness / self.population_size)
+            self.fitness_data['max'].append(max_genome[0])
+            self.fitness_data['min'].append(min_genome[0])
+            
+            # set hitmap data
+            self.max_genomes.append(max_genome[1])
+
+            genomes = self.__select_next_genomes(child_genomes)
+
+        visualization_params = {'gene_size': self.gene_size,
+                                'minterms': self.minterms,
+                                'prime_implicants': self.prime_implicants}
+        return self.fitness_data, self.max_genomes, self.best_solution, visualization_params

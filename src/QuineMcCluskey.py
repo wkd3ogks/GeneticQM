@@ -1,5 +1,4 @@
 import os
-from src.Utils import integer_to_binary
 
 class QuineMcCluskey:
     def __init__(self, minterms, dontcares, output_directory):
@@ -59,7 +58,8 @@ class QuineMcCluskey:
         with open(os.path.join(self.output_directory, f'{step_name}_table.csv'), 'w') as f:
             for bit_count in sorted(table):
                 for minterms, dash_position in sorted(table[bit_count]):
-                    term_to_binary = self.__combine_minterm_with_dash(integer_to_binary.process(minterms[0], self.max_bit), dash_position)
+                    integer_to_binary = format(minterms[0], 'b').zfill(self.max_bit) # convert integer to binary format
+                    term_to_binary = self.__combine_minterm_with_dash(integer_to_binary, dash_position)
                     f.write(f"{bit_count}, {term_to_binary}\n")
 
     def __save_prime_implicants_to_csv(self):

@@ -10,15 +10,14 @@ Genetic Algorithm
 """
 
 import math, random
-from overrides import overrides
 
-from src.Algorithm import Algorithm
 from src.strategy.Crossover import Uniform
 from src.strategy.Selection import RouletteWheel
 
-class GeneticAlgorithm(Algorithm):
+class GeneticAlgorithm:
     def __init__(self, parameters):
-        super().__init__()  # prime_implicants and miterms initailized to None
+        self.prime_implicants = None
+        self.minterms = None
 
         # paramerter dictionary unpacking
         self.population_size = int(parameters["population_size"])
@@ -35,8 +34,10 @@ class GeneticAlgorithm(Algorithm):
         # data for visualization
         self.fitness_data = {'average': [], 'max': [], 'min': []}
         self.max_genomes = []
+    
+    def set_minterms(self, minterms):
+        self.minterms = minterms
 
-    @overrides
     def set_prime_implicants(self, prime_implicants):
         self.prime_implicants = prime_implicants
         self.gene_size = len(self.prime_implicants) # number of prime implicants
@@ -49,7 +50,10 @@ class GeneticAlgorithm(Algorithm):
             list[int]: list of random genomes
         """
         bit_limit = 1 << self.gene_size  # 2 ** self.gene_size
-        return random.choices(range(bit_limit), k=self.population_size) # select random genome from 0 to 2 ** self.gene_size - 1
+        random_genomes = []
+        for _ in range(self.population_size): # select random genome from 0 to 2 ** self.gene_size - 1
+            random_genomes.append(random.randrange(bit_limit))
+        return random_genomes
 
     def __mutation(self, genome):
         if random.random() < self.mutation_rate:

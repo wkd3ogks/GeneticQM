@@ -3,16 +3,15 @@ from datetime import datetime
 
 from src.QuineMcCluskey import QuineMcCluskey
 from src.GeneticAlgorithm import GeneticAlgorithm
-from src.KnuthX import KnuthX
 
 # visualization
 import matplotlib.pyplot as plt
 
 import tkinter as tk
-from tkinter import filedialog, OptionMenu, Scrollbar, Listbox
+from tkinter import filedialog, Scrollbar, Listbox
 
 
-class Manager(tk.Tk): # intergrate QuineMcCluskey, GeneticAlgorithm, KnuthX
+class Manager(tk.Tk): # intergrate QuineMcCluskey, GeneticAlgorithm and GUI
     def __init__(self):
 
         # initialize the GUI
@@ -35,33 +34,15 @@ class Manager(tk.Tk): # intergrate QuineMcCluskey, GeneticAlgorithm, KnuthX
         self.browse_button = tk.Button(self, text="Browse", command=self.__browse_file)
         self.browse_button.grid(row=0, column=2, sticky="e")
 
-        # Algorithm Selection
-        algorithm_choices = ["Genetic Algorithm", "Knuth X"]
-        self.algorithm_label = tk.Label(self, text="Algorithm:")
-        self.algorithm_label.grid(row=1, sticky="e", pady=5)
-        self.default_algorithm = tk.StringVar()
-        self.default_algorithm.set(algorithm_choices[0])
-        self.algorithm_option = OptionMenu(self, self.default_algorithm, *algorithm_choices)
-        self.algorithm_option.grid(row=1, column=1, sticky="w")
-
-        # Srollbar for log
-        self.horizental_scroll = Scrollbar(self, orient='horizontal')
-        self.vertical_scroll = Scrollbar(self, orient='vertical')
-
-        # Create a Log and Connect to Scrollbar
-        self.log = Listbox(self, yscrollcommand=self.vertical_scroll.set, xscrollcommand=self.horizental_scroll.set)
-
-        self.horizental_scroll.config(command=self.log.xview)
-        self.vertical_scroll.config(command=self.log.yview)
-
-        # Place the Log and Scrollbar
-        self.vertical_scroll.grid(row=2, column=4, sticky="ns")
-        self.horizental_scroll.grid(row=3, columnspan=3, sticky="we")
-        self.log.grid(row=2, columnspan=3, sticky="we")
-
         # Run Button
         self.run_button = tk.Button(self, text="Run", command=self.process)
-        self.run_button.grid(row=1, column=2, sticky="e")
+        self.run_button.grid(row=0, column=3, sticky="e")
+
+        # Create a Log and Connect to Scrollbar
+        self.log = Listbox(self)
+        self.log.grid(row=1, columnspan=4, sticky="we")
+
+        
 
         self.__write_log("Application started")
 
@@ -107,6 +88,27 @@ class Manager(tk.Tk): # intergrate QuineMcCluskey, GeneticAlgorithm, KnuthX
         plt.savefig(f"{os.path.join(self.output_directory, 'Fitness_Plot.png')}")
         plt.close()
 
+    def __plot_normalized_fitness(self, fitness_data, title="Normalized Fitness Plot"):
+        epoch = len(fitness_data['average'])
+        max_average, min_average = max(fitness_data['average']), min(fitness_data['average'])
+        max_max, min_max = max(fitness_data['max']), min(fitness_data['max'])
+        max_min, min_min = max(fitness_data['min']), min(fitness_data['min'])
+        normalized_epoch = [0] + list(map(lambda x: x / epoch, range(1, epoch)))
+        normalized_fitness_data = {'average': list(map(lambda x: (x - min_average) / (max_average - min_average), fitness_data['average'])),
+                                'max': list(map(lambda x: (x - min_max) / (max_max - min_max), fitness_data['max'])),
+                                'min': list(map(lambda x: (x - min_min) / (max_min - min_min), fitness_data['min']))}
+        
+        # plt.plot(normalized_epoch, normalized_fitness_data['min'], label='Min Fitness', color='green')
+        plt.plot(normalized_epoch,normalized_fitness_data['average'], label='Average Fitness', color='blue')
+        # plt.plot(normalized_epoch,normalized_fitness_data['max'], label='Max Fitness', color='orange')
+
+        plt.title(title)
+        plt.xlabel("Epoch")
+        plt.ylabel("Fitness")
+        plt.legend(loc='best', framealpha=0.5)
+        plt.savefig(f"{os.path.join(self.output_directory, 'Normalized_Fitness_Plot.png')}")
+        plt.close()
+
     def __binary_gene_to_list(self, gene, gene_size):
             ret = [0 for _ in range(gene_size)]
             for i in range(gene_size):
@@ -137,7 +139,7 @@ class Manager(tk.Tk): # intergrate QuineMcCluskey, GeneticAlgorithm, KnuthX
         plt.close()
 
     def process(self):
-        """Run the Quine-McCluskey algorithm and the selected algorithm(Knuth or Genetic)
+        """Run the Quine-McCluskey algorithm and the Genetic Algorithm
 
         Args:
             p_minterms (list[int]): problem minterms
@@ -154,17 +156,9 @@ class Manager(tk.Tk): # intergrate QuineMcCluskey, GeneticAlgorithm, KnuthX
             self.__write_log("Quine-McCluskey process completed")
 
             # initialize the algorithm
-            if self.default_algorithm.get() == "Knuth X":
-                self.algorithm = KnuthX()
-                self.algorithm.set_prime_implicants(prime_implicants)
-                self.algorithm.set_minterms(minterms)
-                self.algorithm.create_knuth_table()
-                self.__write_log("Knuth X process completed")
-                return None
-            else:
-                self.algorithm = GeneticAlgorithm(testcase["parameters"])
-                self.algorithm.set_prime_implicants(prime_implicants)
-                self.algorithm.set_minterms(minterms)
+            self.algorithm = GeneticAlgorithm(testcase["parameters"])
+            self.algorithm.set_prime_implicants(prime_implicants)
+            self.algorithm.set_minterms(minterms)
 
             # run the algorithm
             start_time = time.time()
@@ -188,6 +182,7 @@ class Manager(tk.Tk): # intergrate QuineMcCluskey, GeneticAlgorithm, KnuthX
 
         # save the visualization results
         self.__plot_fitness(fitness_data)
+        self.__plot_normalized_fitness(fitness_data)
         best_genome_data = list(map(lambda gene: self.__binary_gene_to_list(gene, gene_size), max_genomes))
         self.__plot_hitmap(best_genome_data, 'Blues', title="Prime_Implicants_Usage_Heatmap")
         best_genome_cover_data = list(map(lambda gene: self.__generate_minterm_cover_list(gene, gene_size, prime_implicants, minterms), max_genomes))

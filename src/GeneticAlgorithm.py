@@ -12,8 +12,6 @@ Genetic Algorithm
 import math, random
 from overrides import overrides
 
-import numpy as np
-
 from src.Algorithm import Algorithm
 from src.strategy.Crossover import Uniform
 from src.strategy.Selection import RouletteWheel
@@ -66,12 +64,12 @@ class GeneticAlgorithm(Algorithm):
     def __selection(self, genomes):
         return self.selection_strategy.process(self.parent_population_size, genomes)
 
-    def __select_next_genomes(self, genomes):
+    def __generate_next_genomes(self, genomes):
         """
         Generate the next genomes by selection, crossover and mutation.
 
         Args:
-            genomes (list[int]): list of genomes
+            genomes (list[(int, int)]): list of genomes with fitness (fitness, genome)
 
         Returns:
             list[int]: next generation list of genomes
@@ -136,7 +134,7 @@ class GeneticAlgorithm(Algorithm):
     def process(self):
         genomes = self.__init_population()
         for epoch in range(self.epoch):
-            total_fitness, min_genome, max_genome, child_genomes = self.__evaluate_fitness(genomes, epoch)
+            total_fitness, min_genome, max_genome, genomes_with_fitness = self.__evaluate_fitness(genomes, epoch)
 
             # set fitness data
             self.fitness_data['average'].append(total_fitness / self.population_size)
@@ -146,7 +144,7 @@ class GeneticAlgorithm(Algorithm):
             # set hitmap data
             self.max_genomes.append(max_genome[1])
 
-            genomes = self.__select_next_genomes(child_genomes)
+            genomes = self.__generate_next_genomes(genomes_with_fitness)
 
         visualization_params = {'gene_size': self.gene_size,
                                 'minterms': self.minterms,

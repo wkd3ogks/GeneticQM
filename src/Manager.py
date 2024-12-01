@@ -21,6 +21,11 @@ class Manager(tk.Tk): # intergrate QuineMcCluskey, GeneticAlgorithm, KnuthX
         self.__create_widgets()
 
     def __create_widgets(self):
+        """
+            Create GUI widgets for the application
+        """
+
+        # Testcase File Selection
         self.label = tk.Label(self, text="Testcase File:", pady=5)
         self.label.grid(row=0, sticky="e")
 
@@ -30,30 +35,45 @@ class Manager(tk.Tk): # intergrate QuineMcCluskey, GeneticAlgorithm, KnuthX
         self.browse_button = tk.Button(self, text="Browse", command=self.__browse_file)
         self.browse_button.grid(row=0, column=2, sticky="e")
 
-        choices = ["Genetic Algorithm", "Knuth X"]
+        # Algorithm Selection
+        algorithm_choices = ["Genetic Algorithm", "Knuth X"]
         self.algorithm_label = tk.Label(self, text="Algorithm:")
         self.algorithm_label.grid(row=1, sticky="e", pady=5)
         self.default_algorithm = tk.StringVar()
-        self.default_algorithm.set(choices[0])
-        self.algorithm_option = OptionMenu(self, self.default_algorithm, *choices)
+        self.default_algorithm.set(algorithm_choices[0])
+        self.algorithm_option = OptionMenu(self, self.default_algorithm, *algorithm_choices)
         self.algorithm_option.grid(row=1, column=1, sticky="w")
 
-        self.scroll = Scrollbar(self, orient='horizontal')
-        self.log = Listbox(self, xscrollcommand=self.scroll.set)
-        self.scroll.config(command=self.log.yview)
+        # Srollbar for log
+        self.horizental_scroll = Scrollbar(self, orient='horizontal')
+        self.vertical_scroll = Scrollbar(self, orient='vertical')
+
+        # Create a Log and Connect to Scrollbar
+        self.log = Listbox(self, yscrollcommand=self.vertical_scroll.set, xscrollcommand=self.horizental_scroll.set)
+
+        self.horizental_scroll.config(command=self.log.xview)
+        self.vertical_scroll.config(command=self.log.yview)
+
+        # Place the Log and Scrollbar
+        self.vertical_scroll.grid(row=2, column=4, sticky="ns")
+        self.horizental_scroll.grid(row=3, columnspan=3, sticky="we")
         self.log.grid(row=2, columnspan=3, sticky="we")
 
+        # Run Button
         self.run_button = tk.Button(self, text="Run", command=self.process)
         self.run_button.grid(row=1, column=2, sticky="e")
 
         self.__write_log("Application started")
 
     def __browse_file(self):
-        file_path = filedialog.askopenfilename(filetypes=[("JSON files", "*.json")])
-        if file_path:
-            self.testcase_entry.delete(0, tk.END)
-            self.testcase_entry.insert(0, file_path)
-
+        try:
+            file_path = filedialog.askopenfilename(filetypes=[("JSON file", "*.json")])
+            if file_path:
+                self.testcase_entry.delete(0, tk.END)
+                self.testcase_entry.insert(0, file_path)
+        except Exception as e:
+            self.__write_log(f"Error: {e}")
+        
     def __write_log(self, message):
         self.log.insert(tk.END, f"[{datetime.now().strftime("%H:%M:%S")}] {message}")
         self.log.update()
@@ -65,9 +85,13 @@ class Manager(tk.Tk): # intergrate QuineMcCluskey, GeneticAlgorithm, KnuthX
         Returns:
             str: path of the created directory
         """
-        directory_name = datetime.now().strftime("%Y%m%d_%H%M%S")
-        output_directory = os.path.join("./outputs", directory_name) # location of main.py is the root directory
-        os.makedirs(output_directory, exist_ok=True)
+        try:
+            directory_name = datetime.now().strftime("%Y%m%d_%H%M%S")
+            output_directory = os.path.join("./outputs", directory_name) # location of main.py is the root directory
+            os.makedirs(output_directory, exist_ok=True)
+        except Exception as e:
+            self.__write_log(f"Error: {e}")
+            return ""
         return output_directory
 
     def __plot_fitness(self, data, title="Fitness Plot"):
@@ -130,9 +154,17 @@ class Manager(tk.Tk): # intergrate QuineMcCluskey, GeneticAlgorithm, KnuthX
             self.__write_log("Quine-McCluskey process completed")
 
             # initialize the algorithm
-            self.algorithm = GeneticAlgorithm(testcase["parameters"])
-            self.algorithm.set_prime_implicants(prime_implicants)
-            self.algorithm.set_minterms(minterms)
+            if self.default_algorithm.get() == "Knuth X":
+                self.algorithm = KnuthX()
+                self.algorithm.set_prime_implicants(prime_implicants)
+                self.algorithm.set_minterms(minterms)
+                self.algorithm.create_knuth_table()
+                self.__write_log("Knuth X process completed")
+                return None
+            else:
+                self.algorithm = GeneticAlgorithm(testcase["parameters"])
+                self.algorithm.set_prime_implicants(prime_implicants)
+                self.algorithm.set_minterms(minterms)
 
             # run the algorithm
             start_time = time.time()
@@ -145,13 +177,14 @@ class Manager(tk.Tk): # intergrate QuineMcCluskey, GeneticAlgorithm, KnuthX
         prime_implicants = visualization_params['prime_implicants']
         minterms = visualization_params['minterms']
 
-        # write the results to log
-        best_genome_to_binary = format(best_solution[0], 'b').zfill(gene_size)
-        self.__write_log(f"Best Solution: {best_genome_to_binary}")
-        self.__write_log(f"Number of Used Prime Implicants: {best_solution[3]}")
-        self.__write_log(f"Number of Covered Minterms: {best_solution[2]}")
-        self.__write_log(f"Covered Minterms / Total Minterms: {(best_solution[2]/len(minterms)) * 100}%")
-        self.__write_log(f"Epoch: {best_solution[4]}")
+        # write the results to result.txt
+        with open(os.path.join(self.output_directory, "result.txt"), 'w') as f:
+            best_genome_to_binary = format(best_solution[0], 'b').zfill(gene_size)
+            f.write(f"Best Solution: {best_genome_to_binary}\n")
+            f.write(f"Number of Used Prime Implicants: {best_solution[3]}\n")
+            f.write(f"Number of Covered Minterms: {best_solution[2]}\n")
+            f.write(f"Covered Minterms / Total Minterms: {(best_solution[2]/len(minterms)) * 100}%\n")
+            f.write(f"Epoch: {best_solution[4]}\n")
 
         # save the visualization results
         self.__plot_fitness(fitness_data)

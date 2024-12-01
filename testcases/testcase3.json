@@ -3,11 +3,11 @@
     "dontcares": [],
     "parameters": { 
         "population_size": 70,
-        "parent_population_size": 10,
+        "parent_population_size": 14,
         "epoch": 100,
         "weight": 2,
-        "mutation_rate": 0.3,
-        "bit_mutation_rate": 0.08
+        "mutation_rate": 0.038,
+        "bit_mutation_rate": 0.04
     },
     "strategy": {
         "crossover": "one_point",

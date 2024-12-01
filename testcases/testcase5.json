@@ -3,10 +3,10 @@
     "dontcares": [],
     "parameters": { 
         "population_size": 300,
-        "parent_population_size": 50,
-        "epoch": 500,
+        "parent_population_size": 30,
+        "epoch": 300,
         "weight": 4,
-        "mutation_rate": 0.2,
+        "mutation_rate": 0.02,
         "bit_mutation_rate": 0.03
     },
     "strategy": {

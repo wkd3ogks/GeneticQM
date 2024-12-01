@@ -1,17 +1,17 @@
 import os, json, time
-from datetime import datetime
+from datetime import datetime # for generating the output directory name
 
-from src.QuineMcCluskey import QuineMcCluskey
-from src.GeneticAlgorithm import GeneticAlgorithm
+from QuineMcCluskey import QuineMcCluskey
+from GeneticAlgorithm import GeneticAlgorithm
 
 # visualization
 import matplotlib.pyplot as plt
 
 import tkinter as tk
-from tkinter import filedialog, Scrollbar, Listbox
+from tkinter import filedialog, Listbox
 
 
-class Manager(tk.Tk): # intergrate QuineMcCluskey, GeneticAlgorithm and GUI
+class GeneticQM(tk.Tk): # intergrate QuineMcCluskey, GeneticAlgorithm and GUI
     def __init__(self):
 
         # initialize the GUI
@@ -47,13 +47,10 @@ class Manager(tk.Tk): # intergrate QuineMcCluskey, GeneticAlgorithm and GUI
         self.__write_log("Application started")
 
     def __browse_file(self):
-        try:
-            file_path = filedialog.askopenfilename(filetypes=[("JSON file", "*.json")])
-            if file_path:
-                self.testcase_entry.delete(0, tk.END)
-                self.testcase_entry.insert(0, file_path)
-        except Exception as e:
-            self.__write_log(f"Error: {e}")
+        file_path = filedialog.askopenfilename(filetypes=[("JSON file", "*.json")])
+        if file_path:
+            self.testcase_entry.delete(0, tk.END)
+            self.testcase_entry.insert(0, file_path)
         
     def __write_log(self, message):
         self.log.insert(tk.END, f"[{datetime.now().strftime("%H:%M:%S")}] {message}")
@@ -90,17 +87,13 @@ class Manager(tk.Tk): # intergrate QuineMcCluskey, GeneticAlgorithm and GUI
 
     def __plot_normalized_fitness(self, fitness_data, title="Normalized Fitness Plot"):
         epoch = len(fitness_data['average'])
-        max_average, min_average = max(fitness_data['average']), min(fitness_data['average'])
-        max_max, min_max = max(fitness_data['max']), min(fitness_data['max'])
-        max_min, min_min = max(fitness_data['min']), min(fitness_data['min'])
-        normalized_epoch = [0] + list(map(lambda x: x / epoch, range(1, epoch)))
-        normalized_fitness_data = {'average': list(map(lambda x: (x - min_average) / (max_average - min_average), fitness_data['average'])),
-                                'max': list(map(lambda x: (x - min_max) / (max_max - min_max), fitness_data['max'])),
-                                'min': list(map(lambda x: (x - min_min) / (max_min - min_min), fitness_data['min']))}
         
-        # plt.plot(normalized_epoch, normalized_fitness_data['min'], label='Min Fitness', color='green')
-        plt.plot(normalized_epoch,normalized_fitness_data['average'], label='Average Fitness', color='blue')
-        # plt.plot(normalized_epoch,normalized_fitness_data['max'], label='Max Fitness', color='orange')
+        # normalize the average fitness data
+        
+        max_average, min_average = max(fitness_data['average']), min(fitness_data['average'])
+        normalized_epoch = list(map(lambda x: x / epoch, range(epoch)))
+        normalized_fitness_data = list(map(lambda x: (x - min_average) / (max_average - min_average), fitness_data['average']))
+        plt.plot(normalized_epoch, normalized_fitness_data, label='Average Fitness', color='blue')
 
         plt.title(title)
         plt.xlabel("Epoch")
@@ -127,6 +120,30 @@ class Manager(tk.Tk): # intergrate QuineMcCluskey, GeneticAlgorithm and GUI
                     if j in minterm_to_idx:
                         ret[minterm_to_idx[j]] += 1
         return ret
+
+    def __plot_genetic_diversity(self, data, title="Genetic Diversity Plot"):
+        plt.plot(range(len(data)), data, label='Genetic Diversity', color='purple')
+        plt.title(title)
+        plt.xlabel("Epoch")
+        plt.ylabel("Genetic Diversity")
+        plt.savefig(f"{os.path.join(self.output_directory, 'Genetic_Diversity_Plot.png')}")
+        plt.close()
+    
+    def __plot_group_genetic_diversity(self, data, group=10, title="Genetic Diversity(Group) Plot"):
+        if len(data) % group != 0:
+            raise ValueError("Population size % group should be 0")
+        group_size = len(data) // group
+        x_data = range(0, len(data) - 1, group_size)
+        group_data = []
+        for i in range(0, len(data) - 1, group_size):
+            group = sum(data[i:i + group_size]) / group_size
+            group_data.append(group)
+        plt.plot(x_data, group_data, color='purple')
+        plt.title(title)
+        plt.xlabel("Epoch")
+        plt.ylabel("Genetic Diversity")
+        plt.savefig(f"{os.path.join(self.output_directory, 'Genetic_Diversity_Group_Plot.png')}")
+        plt.close()
 
     def __plot_hitmap(self, data, color, title="Hitmap Plot", has_colorbar=False, has_min_limit=False):
         plt.matshow(data, cmap=plt.get_cmap(color))
@@ -162,9 +179,9 @@ class Manager(tk.Tk): # intergrate QuineMcCluskey, GeneticAlgorithm and GUI
 
             # run the algorithm
             start_time = time.time()
-            fitness_data, max_genomes, best_solution, visualization_params = self.algorithm.process()
+            fitness_data, max_genomes, best_solution, diversity_data, visualization_params = self.algorithm.process()
             end_time = time.time() 
-            self.__write_log("Algorithm process completed")
+            self.__write_log("Genetic Algorithm process completed")
             self.__write_log(f"Excution Time: {end_time - start_time:.5f} seconds")
 
         gene_size = visualization_params['gene_size']
@@ -183,7 +200,12 @@ class Manager(tk.Tk): # intergrate QuineMcCluskey, GeneticAlgorithm and GUI
         # save the visualization results
         self.__plot_fitness(fitness_data)
         self.__plot_normalized_fitness(fitness_data)
+        self.__plot_genetic_diversity(diversity_data)
+        self.__plot_group_genetic_diversity(diversity_data)
         best_genome_data = list(map(lambda gene: self.__binary_gene_to_list(gene, gene_size), max_genomes))
         self.__plot_hitmap(best_genome_data, 'Blues', title="Prime_Implicants_Usage_Heatmap")
         best_genome_cover_data = list(map(lambda gene: self.__generate_minterm_cover_list(gene, gene_size, prime_implicants, minterms), max_genomes))
         self.__plot_hitmap(best_genome_cover_data, 'Greys', title="Minterm_Coverage_Hitmap", has_colorbar=True, has_min_limit=True)
+
+if __name__ == '__main__':
+    GeneticQM().mainloop()

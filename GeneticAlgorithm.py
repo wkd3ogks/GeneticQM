@@ -11,8 +11,8 @@ Genetic Algorithm
 
 import math, random
 
-from src.strategy.Crossover import Uniform
-from src.strategy.Selection import RouletteWheel
+from strategy.Crossover import Uniform
+from strategy.Selection import RouletteWheel
 
 class GeneticAlgorithm:
     def __init__(self, parameters):
@@ -29,9 +29,10 @@ class GeneticAlgorithm:
 
         self.crossover_strategy = Uniform()
         self.selection_strategy = RouletteWheel(self.population_size)
-        self.best_solution = (0, -math.inf, -math.inf, math.inf, -1) # 유전자, 적합도, 커버한 민텀, 사용한 주항, epoch
+        self.best_solution = (0, -math.inf, -math.inf, math.inf, -1)
 
         # data for visualization
+        self.genetic_diversity = []
         self.fitness_data = {'average': [], 'max': [], 'min': []}
         self.max_genomes = []
     
@@ -41,6 +42,18 @@ class GeneticAlgorithm:
     def set_prime_implicants(self, prime_implicants):
         self.prime_implicants = prime_implicants
         self.gene_size = len(self.prime_implicants) # number of prime implicants
+
+    def __evaluate_genetic_diversity(self, genomes):
+        """
+        Evaluate the genetic diversity of the population
+
+        Args:
+            genomes (list[int]): list of genomes
+
+        Returns:
+            int: different genomesdiffe(genetic diversity)
+        """
+        return len(set(genomes)) # set: remove duplicated genomes
 
     def __init_population(self):
         """
@@ -85,6 +98,7 @@ class GeneticAlgorithm:
             random_number2 = random.randrange(self.parent_population_size)
             next_genomes.append(
                 self.__mutation(self.__crossover((parent_genomes[random_number1], parent_genomes[random_number2]))))
+        self.genetic_diversity.append(self.__evaluate_genetic_diversity(next_genomes))
         return next_genomes
 
     def __evaluate_fitness(self, genomes, epoch):
@@ -153,4 +167,4 @@ class GeneticAlgorithm:
         visualization_params = {'gene_size': self.gene_size,
                                 'minterms': self.minterms,
                                 'prime_implicants': self.prime_implicants}
-        return self.fitness_data, self.max_genomes, self.best_solution, visualization_params
+        return self.fitness_data, self.max_genomes, self.best_solution, self.genetic_diversity, visualization_params

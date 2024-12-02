@@ -3,14 +3,14 @@
     "dontcares": [],
     "parameters": { 
         "population_size": 70,
-        "parent_population_size": 14,
+        "parent_population_size": 25,
         "epoch": 100,
-        "weight": 2,
+        "weight": 3,
         "mutation_rate": 0.038,
         "bit_mutation_rate": 0.04
     },
     "strategy": {
-        "crossover": "one_point",
-        "selection": "tournament"
+        "crossover": "single_point",
+        "selection": "roulette_wheel"
     }
 }

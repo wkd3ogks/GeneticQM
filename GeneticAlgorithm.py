@@ -5,17 +5,17 @@ Genetic Algorithm
     3. Select the parents based on the fitness. [ __selection method ]
     4. Generate the next generation by crossover(mixing the genes of the parents) [ __crossover method ] 
     5. Mutate the genes of the next generation. [ __mutation method ]
-    6. Replace the current generation with the next generation. [ __select_next_genomes method ]
+    6. Replace the current generation with the next generation. [ __generate_next_genomes method ]
     7. Repeat steps 2-6 until maximum epoch is reached.
 """
 
 import math, random
 
-from strategy.Crossover import Uniform
+from strategy.Crossover import Uniform, SinglePoint
 from strategy.Selection import RouletteWheel
 
 class GeneticAlgorithm:
-    def __init__(self, parameters):
+    def __init__(self, parameters, strategy):
         self.prime_implicants = None
         self.minterms = None
 
@@ -27,8 +27,17 @@ class GeneticAlgorithm:
         self.parent_population_size = int(parameters["parent_population_size"])
         self.bit_mutation_rate = float(parameters["bit_mutation_rate"])
 
-        self.crossover_strategy = Uniform()
-        self.selection_strategy = RouletteWheel(self.population_size)
+        # strategy dictionary unpacking
+        if strategy['crossover'] == 'uniform':
+            self.crossover_strategy = Uniform()
+        else: 
+            self.crossover_strategy = SinglePoint()
+        if strategy['selection'] == 'roulette_wheel':
+            self.selection_strategy = RouletteWheel(self.population_size)
+        else:
+            self.selection_strategy = None
+
+        # best solution (genome, fitness, covered minterms, used prime implicants, epoch)
         self.best_solution = (0, -math.inf, -math.inf, math.inf, -1)
 
         # data for visualization

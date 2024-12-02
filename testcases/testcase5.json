@@ -4,13 +4,13 @@
     "parameters": { 
         "population_size": 300,
         "parent_population_size": 30,
-        "epoch": 300,
+        "epoch": 800,
         "weight": 4,
         "mutation_rate": 0.02,
         "bit_mutation_rate": 0.03
     },
     "strategy": {
-        "crossover": "one_point",
-        "selection": "tournament"
+        "crossover": "single_point",
+        "selection": "roulette_wheel"
     }
 }

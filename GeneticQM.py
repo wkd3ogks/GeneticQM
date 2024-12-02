@@ -11,9 +11,8 @@ import tkinter as tk
 from tkinter import filedialog, Listbox
 
 
-class GeneticQM(tk.Tk): # intergrate QuineMcCluskey, GeneticAlgorithm and GUI
+class GeneticQM(tk.Tk):
     def __init__(self):
-
         # initialize the GUI
         super().__init__()
         self.title("Genetic Quine-McCluskey")
@@ -38,41 +37,53 @@ class GeneticQM(tk.Tk): # intergrate QuineMcCluskey, GeneticAlgorithm and GUI
         self.run_button = tk.Button(self, text="Run", command=self.process)
         self.run_button.grid(row=0, column=3, sticky="e")
 
-        # Create a Log and Connect to Scrollbar
+        # Log window
         self.log = Listbox(self)
         self.log.grid(row=1, columnspan=4, sticky="we")
-
-        
 
         self.__write_log("Application started")
 
     def __browse_file(self):
+        """
+            Open a file dialog to select a testcase file(.json)
+        """
         file_path = filedialog.askopenfilename(filetypes=[("JSON file", "*.json")])
         if file_path:
             self.testcase_entry.delete(0, tk.END)
             self.testcase_entry.insert(0, file_path)
         
     def __write_log(self, message):
+        """
+        Write a log message to the log window
+
+        Args:
+            message (str): log message
+        """
         self.log.insert(tk.END, f"[{datetime.now().strftime("%H:%M:%S")}] {message}")
         self.log.update()
         self.log.see(tk.END)
         
     def __create_output_directory(self):
-        """Create a directory to store the output files
+        """
+        Create a directory to store the output files
 
         Returns:
             str: path of the created directory
         """
-        try:
-            directory_name = datetime.now().strftime("%Y%m%d_%H%M%S")
-            output_directory = os.path.join("./outputs", directory_name) # location of main.py is the root directory
-            os.makedirs(output_directory, exist_ok=True)
-        except Exception as e:
-            self.__write_log(f"Error: {e}")
-            return ""
+        directory_name = datetime.now().strftime("%Y%m%d_%H%M%S")
+        output_directory = os.path.join("./outputs", directory_name) # location of main.py is the root directory
+        os.makedirs(output_directory, exist_ok=True)
         return output_directory
 
     def __plot_fitness(self, data, title="Fitness Plot"):
+        """
+            Save the fitness plot to the output directory
+
+        Args:
+            data (dict[str, num]): fitness data (min, average, max)
+            title (str, optional): plot title. Defaults to "Fitness Plot".
+        """
+        # x-axis: epoch, y-axis: fitness
         epoch = len(data['average'])
         plt.plot(range(epoch),data['min'], label='Min Fitness', color='green')
         plt.plot(range(epoch),data['average'], label='Average Fitness', color='blue')
@@ -85,14 +96,15 @@ class GeneticQM(tk.Tk): # intergrate QuineMcCluskey, GeneticAlgorithm and GUI
         plt.savefig(f"{os.path.join(self.output_directory, 'Fitness_Plot.png')}")
         plt.close()
 
-    def __plot_normalized_fitness(self, fitness_data, title="Normalized Fitness Plot"):
-        epoch = len(fitness_data['average'])
+    def __plot_normalized_fitness(self, data, title="Normalized Fitness Plot"):
+        epoch = len(data['average'])
         
         # normalize the average fitness data
-        
-        max_average, min_average = max(fitness_data['average']), min(fitness_data['average'])
+        max_average, min_average = max(data['average']), min(data['average'])
         normalized_epoch = list(map(lambda x: x / epoch, range(epoch)))
-        normalized_fitness_data = list(map(lambda x: (x - min_average) / (max_average - min_average), fitness_data['average']))
+        normalized_fitness_data = list(map(lambda x: (x - min_average) / (max_average - min_average), data['average']))
+
+        # x-axis: epoch, y-axis: normalized fitness
         plt.plot(normalized_epoch, normalized_fitness_data, label='Average Fitness', color='blue')
 
         plt.title(title)
@@ -103,13 +115,35 @@ class GeneticQM(tk.Tk): # intergrate QuineMcCluskey, GeneticAlgorithm and GUI
         plt.close()
 
     def __binary_gene_to_list(self, gene, gene_size):
-            ret = [0 for _ in range(gene_size)]
-            for i in range(gene_size):
-                if (gene >> i) & 1:
-                    ret[gene_size - 1 - i] = 1
-            return ret
+        """
+        Convert a binary genome to a list of 0s and 1s for visualization
+
+        Args:
+            gene (int): number type genome
+            gene_size (int): bit size of the genome
+
+        Returns:
+            list[int]: list type genome (0s and 1s)
+        """
+        ret = [0 for _ in range(gene_size)]
+        for i in range(gene_size):
+            if (gene >> i) & 1:
+                ret[gene_size - 1 - i] = 1
+        return ret
 
     def __generate_minterm_cover_list(self, gene, gene_size, prime_implicants, minterms):
+        """
+        Generate a list of minterm coverage for the given genome 
+
+        Args:
+            gene (int): int type genome
+            gene_size (int): bit size of the genome
+            prime_implicants (list[tuple[int]]): list of prime implicants(set of minterms)
+            minterms (list[int]): list of minterms
+
+        Returns:
+            list[int]: list of minterm coverage
+        """
         minterm_to_idx = dict()
         for i, idx in enumerate(minterms):
             minterm_to_idx[idx] = i
@@ -122,7 +156,16 @@ class GeneticQM(tk.Tk): # intergrate QuineMcCluskey, GeneticAlgorithm and GUI
         return ret
 
     def __plot_genetic_diversity(self, data, title="Genetic Diversity Plot"):
-        plt.plot(range(len(data)), data, label='Genetic Diversity', color='purple')
+        """_summary_
+
+        Args:
+            data (list[int]): genetic diversity data(number of unique genomes)
+            title (str, optional): plot title. Defaults to "Genetic Diversity Plot".
+        """
+        # x-axis: epoch, y-axis: genetic diversity
+        epoch = len(data)
+        plt.plot(range(epoch), data, label='Genetic Diversity', color='purple')
+
         plt.title(title)
         plt.xlabel("Epoch")
         plt.ylabel("Genetic Diversity")
@@ -130,6 +173,17 @@ class GeneticQM(tk.Tk): # intergrate QuineMcCluskey, GeneticAlgorithm and GUI
         plt.close()
     
     def __plot_group_genetic_diversity(self, data, group=10, title="Genetic Diversity(Group) Plot"):
+        """
+        Plot the genetic diversity for each group of epochs(average of group epochs) 
+
+        Args:
+            data (_type_): _description_
+            group (int, optional): _description_. Defaults to 10.
+            title (str, optional): _description_. Defaults to "Genetic Diversity(Group) Plot".
+
+        Raises:
+            ValueError: _description_
+        """
         if len(data) % group != 0:
             raise ValueError("Population size % group should be 0")
         group_size = len(data) // group
@@ -146,6 +200,16 @@ class GeneticQM(tk.Tk): # intergrate QuineMcCluskey, GeneticAlgorithm and GUI
         plt.close()
 
     def __plot_hitmap(self, data, color, title="Hitmap Plot", has_colorbar=False, has_min_limit=False):
+        """
+        Plot a hitmap for the given data
+
+        Args:
+            data (_type_): _description_
+            color (_type_): _description_
+            title (str, optional): _description_. Defaults to "Hitmap Plot".
+            has_colorbar (bool, optional): _description_. Defaults to False.
+            has_min_limit (bool, optional): _description_. Defaults to False.
+        """
         plt.matshow(data, cmap=plt.get_cmap(color))
         plt.title(title)
         if has_colorbar:
@@ -156,11 +220,8 @@ class GeneticQM(tk.Tk): # intergrate QuineMcCluskey, GeneticAlgorithm and GUI
         plt.close()
 
     def process(self):
-        """Run the Quine-McCluskey algorithm and the Genetic Algorithm
-
-        Args:
-            p_minterms (list[int]): problem minterms
-            p_dont_cares (list[int]): problem dont_cares
+        """
+            Run the Quine-McCluskey algorithm and the Genetic Algorithm
         """
 
         with open(self.testcase_entry.get(), 'r') as json_file:
@@ -173,7 +234,7 @@ class GeneticQM(tk.Tk): # intergrate QuineMcCluskey, GeneticAlgorithm and GUI
             self.__write_log("Quine-McCluskey process completed")
 
             # initialize the algorithm
-            self.algorithm = GeneticAlgorithm(testcase["parameters"])
+            self.algorithm = GeneticAlgorithm(testcase["parameters"], testcase["strategy"])
             self.algorithm.set_prime_implicants(prime_implicants)
             self.algorithm.set_minterms(minterms)
 

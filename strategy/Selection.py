@@ -1,3 +1,7 @@
+"""
+    Selection module contains the selection strategies for selecting parents based on their fitness.
+"""
+
 import random
 from abc import ABC, abstractmethod
 

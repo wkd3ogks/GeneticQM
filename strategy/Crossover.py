@@ -1,3 +1,7 @@
+"""
+    Crossover module contains the crossover strategies for generating child genomes from parent genomes.
+"""
+
 import random
 from abc import ABC, abstractmethod
 

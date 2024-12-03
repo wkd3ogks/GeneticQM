@@ -1,20 +1,21 @@
+"""
+    Main application for running the Genetic, Quine-McCluskey algorithm
+"""
+
 import os, json, time
-from datetime import datetime # for generating the output directory name
+from datetime import datetime
+
+import matplotlib.pyplot as plt
+import tkinter as tk
+from tkinter import filedialog, Listbox
 
 from QuineMcCluskey import QuineMcCluskey
 from GeneticAlgorithm import GeneticAlgorithm
 
-# visualization
-import matplotlib.pyplot as plt
-
-import tkinter as tk
-from tkinter import filedialog, Listbox
-
 
 class GeneticQM(tk.Tk):
     def __init__(self):
-        # initialize the GUI
-        super().__init__()
+        super().__init__() # initialize the GUI
         self.title("Genetic Quine-McCluskey")
         self.__create_widgets()
 
@@ -162,6 +163,7 @@ class GeneticQM(tk.Tk):
             data (list[int]): genetic diversity data(number of unique genomes)
             title (str, optional): plot title. Defaults to "Genetic Diversity Plot".
         """
+
         # x-axis: epoch, y-axis: genetic diversity
         epoch = len(data)
         plt.plot(range(epoch), data, label='Genetic Diversity', color='purple')
@@ -177,21 +179,24 @@ class GeneticQM(tk.Tk):
         Plot the genetic diversity for each group of epochs(average of group epochs) 
 
         Args:
-            data (_type_): _description_
-            group (int, optional): _description_. Defaults to 10.
-            title (str, optional): _description_. Defaults to "Genetic Diversity(Group) Plot".
-
-        Raises:
-            ValueError: _description_
+            data (list[int]): genetic diversity data(number of unique genomes)
+            group (int, optional): number of epochs in a group. Defaults to 10.
+            title (str, optional): plot title. Defaults to "Genetic Diversity(Group) Plot".
         """
         if len(data) % group != 0:
             raise ValueError("Population size % group should be 0")
+        
+        # x-axis: epoch, y-axis: genetic diversity
         group_size = len(data) // group
         x_data = range(0, len(data) - 1, group_size)
+        
+        # calculate the average of the group epochs
         group_data = []
         for i in range(0, len(data) - 1, group_size):
             group = sum(data[i:i + group_size]) / group_size
             group_data.append(group)
+        
+        # plot the group genetic diversity
         plt.plot(x_data, group_data, color='purple')
         plt.title(title)
         plt.xlabel("Epoch")
@@ -260,7 +265,7 @@ class GeneticQM(tk.Tk):
         self.__plot_fitness(fitness_data)
         self.__plot_normalized_fitness(fitness_data)
         self.__plot_genetic_diversity(diversity_data)
-        self.__plot_group_genetic_diversity(diversity_data)
+        self.__plot_group_genetic_diversity(diversity_data, group=testcase["visulization"]["group"])
         best_genome_data = list(map(lambda gene: self.__binary_gene_to_list(gene, gene_size), max_genomes))
         self.__plot_hitmap(best_genome_data, 'Blues', title="Prime_Implicants_Usage_Heatmap")
         best_genome_cover_data = list(map(lambda gene: self.__generate_minterm_cover_list(gene, gene_size, prime_implicants, minterms), max_genomes))

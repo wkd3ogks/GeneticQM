@@ -209,11 +209,11 @@ class GeneticQM(tk.Tk):
         Plot a hitmap for the given data
 
         Args:
-            data (_type_): _description_
-            color (_type_): _description_
-            title (str, optional): _description_. Defaults to "Hitmap Plot".
-            has_colorbar (bool, optional): _description_. Defaults to False.
-            has_min_limit (bool, optional): _description_. Defaults to False.
+            data (list[int]): hitmap data 
+            color (str): color map
+            title (str, optional): Plot title. Defaults to "Hitmap Plot".
+            has_colorbar (bool, optional): colorbar option. Defaults to False.
+            has_min_limit (bool, optional): minimum limit option. Defaults to False.
         """
         plt.matshow(data, cmap=plt.get_cmap(color))
         plt.title(title)

@@ -1,5 +1,5 @@
 """ 
-Genetic Algorithm
+Genetic Algorithm Implementation
     1. Initialize the population with random genomes. [ __init_population method ]
     2. Evaluate the fitness of each genome. [ evaluate_fitness method ]
     3. Select the parents based on the fitness. [ __selection method ]
@@ -32,10 +32,7 @@ class GeneticAlgorithm:
             self.crossover_strategy = Uniform()
         else: 
             self.crossover_strategy = SinglePoint()
-        if strategy['selection'] == 'roulette_wheel':
-            self.selection_strategy = RouletteWheel(self.population_size)
-        else:
-            self.selection_strategy = None
+        self.selection_strategy = RouletteWheel(self.population_size)
 
         # best solution (genome, fitness, covered minterms, used prime implicants, epoch)
         self.best_solution = (0, -math.inf, -math.inf, math.inf, -1)
@@ -152,6 +149,8 @@ class GeneticAlgorithm:
                 min_genome = [fitness, genome]
             if fitness > max_genome[0]:
                 max_genome = [fitness, genome]
+
+            # update best_solution
             if fitness > self.best_solution[1]:
                 self.best_solution = (genome, fitness, len(cover_set), used_prime_implicant, epoch)
 
@@ -159,6 +158,16 @@ class GeneticAlgorithm:
         return (total_fitness, min_genome, max_genome, genomes_with_fitness)
     
     def process(self, prime_implicants, minterms):
+        """
+        Genetic Algorithm main process
+
+        Args:
+            prime_implicants (list[tuple[int]]): prime implicants
+            minterms (list[int]): minterms
+
+        Returns:
+            (dict, list, tuple, list, dict): fitness_data, max_genomes, best_solution, genetic_diversity, visualization_params
+        """
         self.__set_prime_implicants(prime_implicants)
         self.__set_minterms(minterms)
         genomes = self.__init_population()

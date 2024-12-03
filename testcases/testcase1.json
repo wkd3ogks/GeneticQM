@@ -1,16 +1,15 @@
 {
-    "minterms": [2, 3, 1, 5],
-    "dontcares": [6, 7],
+    "minterms": [1, 4, 7, 8, 18, 28, 32, 33, 34, 36, 41, 44, 49, 56, 58, 60, 62, 68, 69, 71, 74, 77, 79, 81, 84, 85, 87, 91, 96, 98],
+    "dontcares": [],
     "parameters": { 
-        "population_size": 30,
-        "parent_population_size": 10,
-        "epoch": 10,
-        "weight": 2,
-        "mutation_rate": 0.35,
-        "bit_mutation_rate": 0.1
+        "population_size": 70,
+        "parent_population_size": 25,
+        "epoch": 100,
+        "weight": 3,
+        "mutation_rate": 0.038,
+        "bit_mutation_rate": 0.04
     },
     "strategy": {
-        "crossover": "one_point",
-        "selection": "tournament"
+        "crossover": "single_point"
     }
 }

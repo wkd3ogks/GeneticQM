@@ -78,3 +78,12 @@
 
 ### 결과(result.txt)
 <img width="316" alt="image" src="https://github.com/user-attachments/assets/08cea92c-4332-4766-ad79-eb7ab7ed46dd">
+
+## How to Run
+
+![Run](https://github.com/user-attachments/assets/d7a07073-27bd-4924-9e72-10b6776e733d)
+
+
+```
+python3 GeneticQM.py
+```

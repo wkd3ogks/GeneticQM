@@ -265,7 +265,7 @@ class GeneticQM(tk.Tk):
         self.__plot_fitness(fitness_data)
         self.__plot_normalized_fitness(fitness_data)
         self.__plot_genetic_diversity(diversity_data)
-        self.__plot_group_genetic_diversity(diversity_data, group=testcase["visulization"]["group"])
+        self.__plot_group_genetic_diversity(diversity_data, group=testcase["visualization"]["group"])
         best_genome_data = list(map(lambda gene: self.__binary_gene_to_list(gene, gene_size), max_genomes))
         self.__plot_hitmap(best_genome_data, 'Blues', title="Prime_Implicants_Usage_Heatmap")
         best_genome_cover_data = list(map(lambda gene: self.__generate_minterm_cover_list(gene, gene_size, prime_implicants, minterms), max_genomes))

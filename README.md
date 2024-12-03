@@ -1,9 +1,7 @@
 # Quine McCluskey with Genetic Algorithm
 
 ## Description
-이 프로젝트는 **퀸 맥클러스키(Quine-McCluskey) 알고리즘**의 마지막 과정인 **Pi 테이블**에서 최적의 조합을 찾는 문제에 관심을 두고 있습니다.
-
-해당 문제를 해결하기 위해 **유전 알고리즘**을 사용했습니다.
+이 프로젝트는 **퀸 맥클러스키(Quine-McCluskey) 알고리즘**의 마지막 과정인 **Pi 테이블**에서 최적의 조합을 찾는 문제에 관심을 두고 있습니다. 해당 문제를 해결하기 위해 **유전 알고리즘**을 사용했습니다.
 
 ## Language
 - Python

@@ -1,3 +1,7 @@
+"""
+    Quine McCluskey Algorithm Implementation
+"""
+
 import os
 
 class QuineMcCluskey:
@@ -27,7 +31,6 @@ class QuineMcCluskey:
                 table[bit_count].append(((term,), 0))
 
         self.__save_table_to_csv(table)
-        # self.__render_table(1, table)
         return table
 
     def __combine_minterm_with_dash(self, binary_minterm, dash):
@@ -76,15 +79,15 @@ class QuineMcCluskey:
         merge minterms to find prime implicants
 
         Args:
-            step_number (int): _description_
-            table (): _description_
+            step_number (int): step number
+            table (): key: bit_count(group), value: list of tuple (minterms, dash_position)
 
         Returns:
             dict: key: bit_count(group), value: list of tuple (minterms, dash_position)
         """
         new_table = {}
         generated_minterms_set = set()
-        not_prime_implicants = set() # set of not prime implicants
+        not_prime_implicants = set() # set of not prime implicants(already merged with other minterms)
         groups = sorted(table) # sort by group number(bit_count) to compare with the next group
         for group_bit_count in groups: 
             group = sorted(table[group_bit_count])
@@ -95,28 +98,35 @@ class QuineMcCluskey:
                 continue
             else: # find 1 bit difference group
                 target_group = sorted(table[group_bit_count + 1]) 
-                for minterm in group:
-                    if tuple(minterm[0]) not in not_prime_implicants:
+                for minterms, dash_info in group:
+                    if tuple(minterms) not in not_prime_implicants: # check if it is already merged with
                         is_prime_implicant = True
                     else:
                         is_prime_implicant = False
-                    for target_minterm in target_group:
-                        if minterm[1] != target_minterm[1]:  # "-" 가 동일한 위치에 있지 않은 경우
+                    for target_minterms, target_dash_info in target_group:
+                        if dash_info != target_dash_info: # dash position is differnet
                             continue
-                        minterm_with_dash = minterm[0][0] | minterm[1]
-                        target_minterm_with_dash = target_minterm[0][0] | target_minterm[1]
+
+                        # combine minterm with dash information
+                        minterm_with_dash = minterms[0] | dash_info 
+                        target_minterm_with_dash = target_minterms[0] | target_dash_info
+                        
+                        # check if there is only 1 bit difference
                         if (minterm_with_dash ^ target_minterm_with_dash).bit_count() == 1:
                             is_prime_implicant = False
-                            not_prime_implicants.add(tuple(target_minterm[0]))
-                            if tuple(sorted(minterm[0] + target_minterm[0])) in generated_minterms_set:  # 중복 제거
+                            not_prime_implicants.add(tuple(target_minterms))
+                            if tuple(sorted(minterms + target_minterms)) in generated_minterms_set:  # to avoid duplicated minterms
                                 continue
-                            if group_bit_count not in new_table:
+
+                            # add new minterm to the new table
+                            if group_bit_count not in new_table: # 1 bit decrease(group_bit_count + 1 - 1)
                                 new_table[group_bit_count] = []
-                            new_table[group_bit_count].append((sorted(minterm[0] + target_minterm[0]),
-                                                            (minterm_with_dash ^ target_minterm_with_dash) + minterm[1]))
-                            generated_minterms_set.add((tuple(sorted(minterm[0] + target_minterm[0]))))
-                    if is_prime_implicant:
-                        self.prime_implicants.append(tuple(minterm[0]))
+                            new_table[group_bit_count].append((sorted(minterms + target_minterms),
+                                                            (minterm_with_dash ^ target_minterm_with_dash) + dash_info))
+                            generated_minterms_set.add((tuple(sorted(minterms + target_minterms))))
+
+                    if is_prime_implicant: # check if it is prime implicant
+                        self.prime_implicants.append(tuple(minterms))
         if new_table:
             self.__save_table_to_csv(new_table, f'step_{step_number}')
         return new_table
@@ -126,7 +136,7 @@ class QuineMcCluskey:
         Quine McCluskey main process
 
         Returns:
-            (int, int): prime implicants(list[tuple[int]]) and minterms(list[int])
+            (list[tuple[int]], list[int]): prime implicants(list[tuple[int]]) and minterms(list[int])
         """
         new_table = self.__init_table()
         step_number = 2

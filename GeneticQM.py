@@ -235,12 +235,10 @@ class GeneticQM(tk.Tk):
 
             # initialize the algorithm
             self.algorithm = GeneticAlgorithm(testcase["parameters"], testcase["strategy"])
-            self.algorithm.set_prime_implicants(prime_implicants)
-            self.algorithm.set_minterms(minterms)
 
             # run the algorithm
             start_time = time.time()
-            fitness_data, max_genomes, best_solution, diversity_data, visualization_params = self.algorithm.process()
+            fitness_data, max_genomes, best_solution, diversity_data, visualization_params = self.algorithm.process(prime_implicants, minterms)
             end_time = time.time() 
             self.__write_log("Genetic Algorithm process completed")
             self.__write_log(f"Excution Time: {end_time - start_time:.5f} seconds")

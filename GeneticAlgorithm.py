@@ -45,10 +45,10 @@ class GeneticAlgorithm:
         self.fitness_data = {'average': [], 'max': [], 'min': []}
         self.max_genomes = []
     
-    def set_minterms(self, minterms):
+    def __set_minterms(self, minterms):
         self.minterms = minterms
 
-    def set_prime_implicants(self, prime_implicants):
+    def __set_prime_implicants(self, prime_implicants):
         self.prime_implicants = prime_implicants
         self.gene_size = len(self.prime_implicants) # number of prime implicants
 
@@ -158,7 +158,9 @@ class GeneticAlgorithm:
             genomes_with_fitness.append((fitness, genome))
         return (total_fitness, min_genome, max_genome, genomes_with_fitness)
     
-    def process(self):
+    def process(self, prime_implicants, minterms):
+        self.__set_prime_implicants(prime_implicants)
+        self.__set_minterms(minterms)
         genomes = self.__init_population()
         for epoch in range(self.epoch):
             total_fitness, min_genome, max_genome, genomes_with_fitness = self.__evaluate_fitness(genomes, epoch)

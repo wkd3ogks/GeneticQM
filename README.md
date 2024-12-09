@@ -23,6 +23,9 @@
 
 ## Genetic Algorithm
 1. 초기화: 초기화 과정으로 랜덤하게 유전자를 생성합니다.([__init_population method](https://github.com/wkd3ogks/GeneticQM/blob/207686d6991fe6d09662d18ec1220c0319eb3b88/GeneticAlgorithm.py#L64))
+2.  평가: 생성한 유전자에 대해 적합도 함수를 통해 평가합니다.([__evaluate_fitness method](https://github.com/wkd3ogks/GeneticQM/blob/207686d6991fe6d09662d18ec1220c0319eb3b88/GeneticAlgorithm.py#L110))
+3.  선택: 평가된 적합도를 바탕으로 부모 개체를 선택합니다.([__selection method](https://github.com/wkd3ogks/GeneticQM/blob/207686d6991fe6d09662d18ec1220c0319eb3b88/GeneticAlgorithm.py#L87)
+   - fdsaf
 
 ## Fitness Function
 

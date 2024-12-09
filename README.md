@@ -21,6 +21,8 @@
     ├── GeneticAlgorithm.py      # Genetic Algorithm Implementation   
     └── QuineMcCluskey.py        # Quine McCluskey Implementation
 
+## Genetic Algorithm
+1. 초기화: 초기화 과정으로 랜덤하게 유전자를 생성합니다.([__init_population method](https://github.com/wkd3ogks/GeneticQM/blob/207686d6991fe6d09662d18ec1220c0319eb3b88/GeneticAlgorithm.py#L64))
 
 ## Fitness Function
 

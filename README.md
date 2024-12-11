@@ -26,7 +26,7 @@
 2.  평가: 생성한 유전자에 대해 적합도 함수를 통해 평가합니다.([__evaluate_fitness method](https://github.com/wkd3ogks/GeneticQM/blob/207686d6991fe6d09662d18ec1220c0319eb3b88/GeneticAlgorithm.py#L110))
 3.  선택: 평가된 적합도를 바탕으로 부모 개체를 선택합니다.([__selection method](https://github.com/wkd3ogks/GeneticQM/blob/207686d6991fe6d09662d18ec1220c0319eb3b88/GeneticAlgorithm.py#L87))
      - 선택의 자세한 구현은 RouletteWheel 방식을 사용했습니다.([RouletteWheel class](https://github.com/wkd3ogks/GeneticQM/blob/d8a04129fc0955593c4fdcff38081d99573cfc61/strategy/Selection.py#L23))
-     -  적합도는 항상 양의 정수라는 점을 활용해 이분 탐색(lower bound)을 통해 효율적으로 부모를 선택하고자 했습니다.
+     -  적합도는 항상 양의 정수라는 점과 누적합을 바탕으로 이분 탐색(lower bound)을 통해 효율적으로 부모를 선택하고자 했습니다.
 4. 교차: 부모 개체를 바탕으로 교차를 통해 다음 세대 유전자를 생성합니다.([__crossover method](https://github.com/wkd3ogks/GeneticQM/blob/d8a04129fc0955593c4fdcff38081d99573cfc61/GeneticAlgorithm.py#L84))
      -  single_point와 uniform으로 총 2가지의 방법이 구현되어 있습니다.([single_point class](https://github.com/wkd3ogks/GeneticQM/blob/d8a04129fc0955593c4fdcff38081d99573cfc61/strategy/Crossover.py#L24), [uniform class](https://github.com/wkd3ogks/GeneticQM/blob/d8a04129fc0955593c4fdcff38081d99573cfc61/strategy/Crossover.py#L36))
 5. 변이: 교차로 생성된 유전자에 대해 변의를 만듭니다.([__mutation method](https://github.com/wkd3ogks/GeneticQM/blob/d8a04129fc0955593c4fdcff38081d99573cfc61/GeneticAlgorithm.py#L77))
